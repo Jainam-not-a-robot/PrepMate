@@ -32,11 +32,3 @@ def _generate_gemini_response(user_prompt):
     response = model.generate_content(user_prompt)
     print(response.text)
     return response.text
-
-async def main():
-    text = """"""
-    result = await useGemini(text)
-    # You can do something with result here if needed
-
-if __name__ == "__main__":
-    asyncio.run(main())

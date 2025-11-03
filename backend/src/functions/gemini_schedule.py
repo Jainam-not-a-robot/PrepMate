@@ -1,17 +1,54 @@
+"""
+    This file uses gemini to make a list of the topics of the text generated from the ocr model 
+"""
 from dotenv import load_dotenv
 import os
 import google.generativeai as genai
 from google.generativeai import types
 import asyncio
-
+from pydantic import BaseModel, ValidationError
+import json
 # Load API key from .env
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-
+a=0
 if not api_key:
     raise ValueError("API key not found in environment variables!")
 
-async def useGemini(user_prompt: str):
+class TopicItem(BaseModel):
+    id:int
+    topic:str
+
+class TopicsResponse(BaseModel):
+    topics: List[TopicItem]
+
+async def ValidateOutput(topics:str,user_prompt:dict):
+    try:
+        data=json.loads(topics)
+        if isinstance(data,list):
+            topics = [TopicItem(**item) for item in data]
+            result = TopicsResponse(topics=topics)
+        elif isinstance(data,dict) and topics in data:
+            result = TopicsResponse(**data)
+        else:
+            if(a<3):
+                print("Unexpectedly got wrong output format... Running again")
+                a=a+1
+            else:
+                print("There might be an error. Please sending the notes again :(")
+                return None
+            useGemini(user_prompt)
+        return result
+    except json.JSONDecodeError as e:
+        print("Invalid JSON format:", e)
+        print("Raw output:", raw_output)
+        return None
+    except ValidationError as e:
+        print("Schema validation failed:")
+        print(e.json())
+        return None
+
+async def useGemini(user_prompt: dict):
     """Async wrapper for synchronous Gemini API call."""
     return await asyncio.to_thread(_generate_gemini_response, user_prompt)
 
@@ -26,9 +63,19 @@ def _generate_gemini_response(user_prompt):
             "Example: [{'id': 1, 'topic': 'Introduction to AI'}, {'id': 2, 'topic': 'Machine Learning Basics'}]"
         ),
         generation_config=types.GenerationConfig(
-            response_mime_type="application/json"
+            response_mime_type="application/json",
+            temperature=0.3
         )
     )
-    response = model.generate_content(user_prompt)
-    print(response.text)
-    return response.text
+    response=""
+    if(len(user_prompt["full_text"])<2000):
+        response = model.generate_content(user_prompt["full_text"]).text
+    else:
+        responses = []
+        for page_text in user_prompt["page_by_page_text"]:
+            part = model.generate_content(page_text)
+            responses.append(part.text)
+        response= "[" + ",".join(responses) + "]"
+    print(response)
+    final_response=ValidateOutput(topics,user_prompt)
+    return final_response

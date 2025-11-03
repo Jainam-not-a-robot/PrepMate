@@ -3,8 +3,8 @@ import pymupdf as fitz
 from PIL import Image
 import io
 import easyocr
+reader=None
 import numpy as np
-
 def get_reader():
     global reader
     if reader is None:

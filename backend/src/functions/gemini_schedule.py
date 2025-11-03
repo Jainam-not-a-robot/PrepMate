@@ -8,6 +8,7 @@ from google.generativeai import types
 import asyncio
 from pydantic import BaseModel, ValidationError
 import json
+from typing import List
 # Load API key from .env
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
@@ -22,26 +23,28 @@ class TopicItem(BaseModel):
 class TopicsResponse(BaseModel):
     topics: List[TopicItem]
 
-async def ValidateOutput(topics:str,user_prompt:dict):
+async def ValidateOutput(raw_json:str,user_prompt:dict):
+    global a
     try:
-        data=json.loads(topics)
+        data=json.loads(raw_json)
         if isinstance(data,list):
             topics = [TopicItem(**item) for item in data]
             result = TopicsResponse(topics=topics)
-        elif isinstance(data,dict) and topics in data:
-            result = TopicsResponse(**data)
+        elif isinstance(data,dict) and "topics" in data:
+            topics = [TopicItem(**item) for item in data["topics"]]
+            return TopicsResponse(topics=topics)
         else:
             if(a<3):
                 print("Unexpectedly got wrong output format... Running again")
                 a=a+1
+                return await useGemini(user_prompt)
             else:
                 print("There might be an error. Please sending the notes again :(")
                 return None
-            useGemini(user_prompt)
         return result
     except json.JSONDecodeError as e:
         print("Invalid JSON format:", e)
-        print("Raw output:", raw_output)
+        print("Raw output:", raw_json)
         return None
     except ValidationError as e:
         print("Schema validation failed:")
@@ -50,9 +53,9 @@ async def ValidateOutput(topics:str,user_prompt:dict):
 
 async def useGemini(user_prompt: dict):
     """Async wrapper for synchronous Gemini API call."""
-    return await asyncio.to_thread(_generate_gemini_response, user_prompt)
+    return await _generate_gemini_response(user_prompt)
 
-def _generate_gemini_response(user_prompt):
+async def _generate_gemini_response(user_prompt):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash",
@@ -75,7 +78,7 @@ def _generate_gemini_response(user_prompt):
         for page_text in user_prompt["page_by_page_text"]:
             part = model.generate_content(page_text)
             responses.append(part.text)
-        response= "[" + ",".join(responses) + "]"
+        response= ",".join(responses)
     print(response)
-    final_response=ValidateOutput(topics,user_prompt)
+    final_response=await ValidateOutput(response,user_prompt)
     return final_response

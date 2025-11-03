@@ -13,6 +13,6 @@ async def checklistMaker(filename:str):
     # UPLOAD_DIR = BASE_DIR / "uploads"
     # UPLOAD_DIR.mkdir(exist_ok=True) 
     filename = Path(filename).name
-    file_path=str("/home/jainam/Documents/projects/schedule_maker/backend/Screenshot from 2025-10-07 20-19-37.pdf")
+    file_path=str("/home/jainam/Documents/projects/PrepMate/backend/jainam_resume.pdf")
 
     return await checklist_access(file_path)

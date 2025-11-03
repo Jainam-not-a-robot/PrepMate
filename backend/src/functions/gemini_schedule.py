@@ -32,16 +32,11 @@ async def ValidateOutput(raw_json:str,user_prompt:dict):
             result = TopicsResponse(topics=topics)
         elif isinstance(data,dict) and "topics" in data:
             topics = [TopicItem(**item) for item in data["topics"]]
-            return TopicsResponse(topics=topics)
+            result = TopicsResponse(topics=topics)
         else:
-            if(a<3):
-                print("Unexpectedly got wrong output format... Running again")
-                a=a+1
-                return await useGemini(user_prompt)
-            else:
-                print("There might be an error. Please sending the notes again :(")
-                return None
-        return result
+            print("Unexpected format")
+            return None
+        return result.model_dump()
     except json.JSONDecodeError as e:
         print("Invalid JSON format:", e)
         print("Raw output:", raw_json)
@@ -70,15 +65,21 @@ async def _generate_gemini_response(user_prompt):
             temperature=0.3
         )
     )
-    response=""
-    if(len(user_prompt["full_text"])<2000):
-        response = model.generate_content(user_prompt["full_text"]).text
-    else:
-        responses = []
-        for page_text in user_prompt["page_by_page_text"]:
-            part = model.generate_content(page_text)
-            responses.append(part.text)
-        response= ",".join(responses)
-    print(response)
-    final_response=await ValidateOutput(response,user_prompt)
+    i=0
+    for i in range(3):
+        if(len(user_prompt["full_text"])<2000):
+            response = model.generate_content(user_prompt["full_text"]).text
+        else:
+            responses = []
+            for page_text in user_prompt["page_by_page_text"]:
+                part = model.generate_content(page_text)
+                responses.append(part.text)
+            response= ",".join(responses)
+        print(response)
+        final_response=await ValidateOutput(response,user_prompt)
+        if(final_response is not None):
+            break
+    if(i==3):
+        return None
+
     return final_response

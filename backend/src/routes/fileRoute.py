@@ -9,10 +9,10 @@ async def handle_upload(file:UploadFile = File(...)):
 
 @fileRouter.get("/checklist")
 async def checklistMaker(filename:str):
-    BASE_DIR = Path(__file__).resolve().parent
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
     # UPLOAD_DIR = BASE_DIR / "uploads"
     # UPLOAD_DIR.mkdir(exist_ok=True) 
     filename = Path(filename).name
-    file_path=str("/home/jainam/Documents/projects/PrepMate/backend/jainam_resume.pdf")
-
+    file_path=str(BASE_DIR/filename)
+    print(BASE_DIR,filename)
     return await checklist_access(file_path)

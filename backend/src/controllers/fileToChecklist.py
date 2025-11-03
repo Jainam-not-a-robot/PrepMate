@@ -22,10 +22,8 @@ async def checklist_access(file_path:str):
     try:
         # Parse JSON response
         print("-"*100)
-        print(checklist)
-        topics = json.loads(checklist)
-        
-        return topics
+        print(checklist["topics"])
+        return checklist["topics"]
     except json.JSONDecodeError as e:
         print(f"Error parsing JSON: {e}")
         return {"error": "Invalid JSON response from Gemini"}

@@ -12,7 +12,7 @@ async def getting_notes(file_name:str):
     return await read_notes(file_name)
 
 @fileRouter.get("/checklist")
-async def checklistMaker(filename:str,ocr_notes:dict):
+async def checklistMaker(filename:str):
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     # UPLOAD_DIR = BASE_DIR / "uploads"
     # UPLOAD_DIR.mkdir(exist_ok=True) 
@@ -20,12 +20,13 @@ async def checklistMaker(filename:str,ocr_notes:dict):
     file_path=str(BASE_DIR/filename)
     # print(BASE_DIR,filename)
     # notes=await read_notes(file_path)
-    return await checklist_access(file_path,ocr_notes)
+    return await checklist_access(file_path,notes)
 
 @fileRouter.get("/quiz")
-async def quizGenerator(filename:str,ocr_notes:dict,difficulty:str,num_of_questions:int):
+async def quizGenerator(filename:str,difficulty:str,num_of_questions:int):
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     filename = Path(filename).name
     file_path=str(BASE_DIR/filename)
+    ocr_notes=await read_notes(filename)
     return await quiz_generate(file_path,ocr_notes,difficulty,num_of_questions)
 

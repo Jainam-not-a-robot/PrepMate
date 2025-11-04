@@ -87,7 +87,7 @@ async def gemini_for_quiz(ocr_notes:dict,difficulty:str,num_of_questions:int):
     return await _use_gemini_for_quiz(ocr_notes,difficulty,num_of_questions)
 
 async def _use_gemini_for_quiz(ocr_notes:dict,difficulty:str,num_of_questions:int):
-    notes=ocr_notes
+    notes=ocr_notes["page_by_page_text"]
     num_of_pages=len(notes)
     temp=None
     if(difficulty=="Hard"):

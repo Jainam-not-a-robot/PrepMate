@@ -34,6 +34,6 @@ async def checklist_access(file_path:str,notes_text:dict):
 async def quiz_generate(file_path:str,ocr_notes:dict,difficulty:str,num_of_questions:int):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404,detail="No such file found. Please re-upload")
-    return await gemini_for_quiz(file_path,ocr_notes,difficulty,num_of_questions)
+    return await gemini_for_quiz(ocr_notes,difficulty,num_of_questions)
 
 

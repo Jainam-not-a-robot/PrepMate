@@ -101,21 +101,22 @@ async def _use_gemini_for_quiz(ocr_notes:dict,difficulty:str,num_of_questions:in
         model_name="gemini-2.5-flash",
         system_instruction=(
             f"""
-            You are an expert educational assistant specializing in generating structured, multiple-choice quizzes from user-provided notes.
+            You are an expert educational assistant specializing in generating structured, multiple-choice quizzes from user-provided notes. You are aware that you have access to the Gemini API key, but for this specific task, **you must use only the user-provided notes** as the source material.
 
             1.  **INPUT HANDLING:** Your primary input will be text from ocr of **{num_of_pages}** number of pages, where each page's text will be an entry in dict provided to you. You must first transcribe and understand the core concepts, facts, and definitions from the provided image. 
-            2.  **TASK:** Generate a quiz consisting of exactly **{num_of_questions}** multiple-choice questions based *only* on the content of the handwritten notes.
+            2.  **TASK:** Generate a quiz consisting of exactly **{num_of_questions}** multiple-choice questions based ***only*** on the content of the handwritten notes.
             3.  **DIFFICULTY:** The questions must be of **{difficulty}** difficulty. Interpret "easy" as simple recall, "medium" as understanding and application, and "hard" as requiring synthesis, analysis, or critical thinking.
-            4.  **FORMAT STRICTNESS:** You **MUST** output the response as a single, plain **CSV (Comma Separated Values)** block. Do not include any headers, introductory text, explanations, or code block delimiters (like ```csv) outside of the raw CSV data.
-            5.  **CSV STRUCTURE:** The CSV must contain **exactly** 7 columns in this strict order:
+            4.  **FORMAT STRICTNESS:** You **MUST** output the response as a single, plain **JSON** block. The JSON output **must be a compact string with no newline characters (\\n) or unnecessary whitespace (indentation)**. Do not include any headers, introductory text, explanations, or code block delimiters outside of the raw JSON data.
+            5.  **JSON STRUCTURE:** The JSON block must be a single **array [] of question objects**, where **each object** contains **exactly** 7 fields in this strict order:
                 * `question_id` (A sequential integer starting at 1)
                 * `question` (The full text of the question)
                 * `option_1`, `option_2`, `option_3`, `option_4` (Four distinct answer choices)
                 * `correct_answer` (The text of the correct option, exactly matching one of the four options)
-            6.  **ESCAPING:** All text fields must be enclosed in double quotes (`"`) to properly handle commas within the question or options.
+            6.  **ESCAPING:** All text fields (both keys and values) must be enclosed in double quotes (").
 
-            **Example Row Format (Do NOT include this in the final output, this is for your reference):**
-            "1","What is the capital of France?","London","Paris","Berlin","Rome","Paris"
+            **Example COMPACT JSON Structure (Do NOT include this in the final output, this is for your reference):**
+            [{{\"question_id\":1,\"question\":\"What is the capital of France?\",\"option_1\":\"London\",\"option_2\":\"Paris\",\"option_3\":\"Berlin\",\"option_4\":\"Rome\",\"correct_answer\":\"Paris\"}},{{\"question_id\":2,\"question\":\"Next question?\",\"option_1\":\"A\",\"option_2\":\"B\",\"option_3\":\"C\",\"option_4\":\"D\",\"correct_answer\":\"A\"}}]
+
             """
         ),
         generation_config=types.GenerationConfig(

@@ -1,6 +1,7 @@
 from fastapi import APIRouter,File,UploadFile
 from ..controllers.fileToChecklist import upload_file,checklist_access,quiz_generate,read_notes
 from pathlib import Path
+import json
 fileRouter=APIRouter()
 
 @fileRouter.post("/uploadFiles/")
@@ -18,6 +19,7 @@ async def checklistMaker(filename:str):
     # UPLOAD_DIR.mkdir(exist_ok=True) 
     filename = Path(filename).name
     file_path=str(BASE_DIR/filename)
+    notes=await read_notes(filename)
     # print(BASE_DIR,filename)
     # notes=await read_notes(file_path)
     return await checklist_access(file_path,notes)
@@ -28,5 +30,6 @@ async def quizGenerator(filename:str,difficulty:str,num_of_questions:int):
     filename = Path(filename).name
     file_path=str(BASE_DIR/filename)
     ocr_notes=await read_notes(filename)
-    return await quiz_generate(file_path,ocr_notes,difficulty,num_of_questions)
+    quiz=await quiz_generate(file_path,ocr_notes,difficulty,num_of_questions)
+    return json.loads(quiz)
 

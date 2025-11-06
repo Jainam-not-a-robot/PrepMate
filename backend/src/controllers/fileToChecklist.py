@@ -1,17 +1,31 @@
-from fastapi import File,UploadFile,HTTPException
+from fastapi import File,UploadFile,HTTPException, Depends
 from fastapi.responses import JSONResponse
 from ..functions.gemini_schedule import useGemini,gemini_for_quiz
 from ..functions.pdf_to_text_generator import convertImgToText,get_reader
 import os
 import aiofiles
 import json
-async def upload_file(file:UploadFile=File(...)):
+from ..db.database import get_db
+from sqlalchemy.orm import Session
+from ..models.uploadFileModel import fileUploadModel
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+async def upload_file(file:UploadFile=File(...),db:Session=Depends(get_db)):
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Please upload pdf file")
-    async with aiofiles.open(file.filename, "wb") as f:
+
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    async with aiofiles.open(file_path, "wb") as f:
         while chunk := await file.read(1024 * 1024):  # 1 MB chunk
             await f.write(chunk)
-    return JSONResponse({"filename":file.filename})
+    new_file=fileUploadModel(filename=file.filename)
+    db.add(new_file)
+    db.commit()
+    db.refresh(new_file)
+    
+    return {"message": "File uploaded successfully", "file": new_file.filename}
 
 async def read_notes(file_path:str):
     if not os.path.exists(file_path):

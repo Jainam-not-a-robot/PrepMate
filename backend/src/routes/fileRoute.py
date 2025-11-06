@@ -1,12 +1,14 @@
-from fastapi import APIRouter,File,UploadFile
+from fastapi import APIRouter,File,UploadFile,Depends
+from sqlalchemy.orm import Session
 from ..controllers.fileToChecklist import upload_file,checklist_access,quiz_generate,read_notes
 from pathlib import Path
 import json
+from ..db.database import get_db
 fileRouter=APIRouter()
 
 @fileRouter.post("/uploadFiles/")
-async def handle_upload(file:UploadFile = File(...)):
-    return await upload_file(file)
+async def handle_upload(file:UploadFile = File(...),db:Session=Depends(get_db)):
+    return await upload_file(file,db)
 
 @fileRouter.get("/ocr_notes")
 async def getting_notes(file_name:str):

@@ -15,35 +15,6 @@ api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("API key not found in environment variables!")
 
-class TopicItem(BaseModel):
-    id:int
-    topic:str
-
-class TopicsResponse(BaseModel):
-    topics: List[TopicItem]
-
-async def ValidateOutput(raw_json:str,user_prompt:dict):
-    # global a
-    try:
-        data=json.loads(raw_json)
-        if isinstance(data,list):
-            topics = [TopicItem(**item) for item in data]
-            result = TopicsResponse(topics=topics)
-        elif isinstance(data,dict) and "topics" in data:
-            topics = [TopicItem(**item) for item in data["topics"]]
-            result = TopicsResponse(topics=topics)
-        else:
-            print("Unexpected format")
-            return None
-        return result.model_dump()
-    except json.JSONDecodeError as e:
-        print("Invalid JSON format:", e)
-        print("Raw output:", raw_json)
-        return None
-    except ValidationError as e:
-        print("Schema validation failed:")
-        print(e.json())
-        return None
 
 async def useGemini(user_prompt: dict):
     """Async wrapper for synchronous Gemini API call."""
@@ -75,13 +46,10 @@ async def _generate_gemini_response(user_prompt):
                 responses.append(part.text)
             response= ",".join(responses)
         print(response)
-        final_response=await ValidateOutput(response,user_prompt)
-        if(final_response is not None):
-            break
     if(i==3):
         return None
 
-    return final_response
+    return response
 
 async def gemini_for_quiz(ocr_notes:dict,difficulty:str,num_of_questions:int):
     return await _use_gemini_for_quiz(ocr_notes,difficulty,num_of_questions)

@@ -1,6 +1,6 @@
 from fastapi import APIRouter,File,UploadFile,Depends
 from sqlalchemy.orm import Session
-from ..controllers.fileToChecklist import upload_file,checklist_access,quiz_generate,read_notes
+from ..controllers.fileToChecklist import upload_file,checklist_access,quiz_generate,read_notes,makeChecklist
 from pathlib import Path
 import json
 from ..db.database import get_db
@@ -14,13 +14,13 @@ async def handle_upload(file:UploadFile = File(...),db:Session=Depends(get_db)):
 async def getting_notes(file_name:str):
     return await read_notes(file_name)
 
-@fileRouter.get("/checklist")
-async def checklistMaker(filename:str):
+@fileRouter.post("/checklist")
+async def checklistMaker(filename:str,db:Session=Depends(get_db)):
     BASE_DIR = Path(__file__).resolve().parent.parent.parent/"uploads"
     filename = Path(filename).name
     file_path=str(BASE_DIR/filename)
     notes=await read_notes(file_path)
-    return await checklist_access(file_path,notes)
+    return await makeChecklist(file_path,notes,db)
 
 @fileRouter.get("/quiz")
 async def quizGenerator(filename:str,difficulty:str,num_of_questions:int):

@@ -22,8 +22,8 @@ async def checklistMaker(filename:str,db:Session=Depends(get_db)):
     notes=await read_notes(file_path)
     return await makeChecklist(file_path,notes,db)
 
-@fileRouter.get("/quiz")
-async def quizGenerator(filename:str,difficulty:str,num_of_questions:int):
+@fileRouter.post("/quiz")
+async def quizGenerator(filename:str,difficulty:str,num_of_questions:int,db:Session=Depends(get_db)):
     BASE_DIR = Path(__file__).resolve().parent.parent.parent/"uploads"
     filename = Path(filename).name
     print(BASE_DIR)
@@ -31,6 +31,6 @@ async def quizGenerator(filename:str,difficulty:str,num_of_questions:int):
     print(file_path)
     # file_path="/home/jainam/Documents/projects/PrepMate/backend/uploads/l4.pdf"
     ocr_notes=await read_notes(file_path)
-    quiz=await quiz_generate(file_path,ocr_notes,difficulty,num_of_questions)
-    return json.loads(quiz)
+    quiz=await quiz_generate(file_path,ocr_notes,difficulty,num_of_questions,db)
+    return quiz
 

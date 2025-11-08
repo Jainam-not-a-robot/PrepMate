@@ -10,6 +10,7 @@ class FileUploadModel(Base):
 class MultipleChecklistModel(Base):
     __tablename__="multichecklist"
     item_id=Column(Integer,primary_key=True,index=True)
+    checklist_name=Column(Text,nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     checklists=relationship("ChecklistModel",back_populates="parent",cascade="all, delete-orphan")
 

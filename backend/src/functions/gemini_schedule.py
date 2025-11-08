@@ -56,8 +56,8 @@ async def _generate_gemini_response(user_prompt):
         system_instruction=(
             "You are a planner! The user will provide you with text "
             "generated from image-to-text models from handwritten or printed notes. "
-            "Your role is to give output in JSON format, as a list of objects, each with 'id' (whole number) and 'topic' (string containing main topic covered in the notes). "
-            "Example: [{'id': 1, 'topic': 'Introduction to AI'}, {'id': 2, 'topic': 'Machine Learning Basics'}]"
+            "Your role is to give output in JSON format, as a list of objects, each with 'checklist_id' (whole number) and 'topic' (string containing main topic covered in the notes). "
+            "Example: [{'checklist_id': 1, 'topic': 'Introduction to AI'}, {'checklist_id': 2, 'topic': 'Machine Learning Basics'}]"
         ),
         generation_config=types.GenerationConfig(
             response_mime_type="application/json",

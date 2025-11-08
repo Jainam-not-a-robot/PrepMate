@@ -7,7 +7,7 @@ import aiofiles
 import json
 from ..db.database import get_db
 from sqlalchemy.orm import Session
-from ..models.uploadFileModel import fileUploadModel
+from ..models.uploadFileModel import FileUploadModel
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -20,7 +20,7 @@ async def upload_file(file:UploadFile=File(...),db:Session=Depends(get_db)):
     async with aiofiles.open(file_path, "wb") as f:
         while chunk := await file.read(1024 * 1024):  # 1 MB chunk
             await f.write(chunk)
-    new_file=fileUploadModel(filename=file.filename)
+    new_file=FileUploadModel(filename=file.filename)
     db.add(new_file)
     db.commit()
     db.refresh(new_file)
@@ -40,14 +40,20 @@ async def checklist_access(file_path:str,notes_text:dict):
         # Parse JSON response
         print("-"*100)
         print(checklist["topics"])
-        return checklist["topics"]
+        result=checklist["topics"]
+        for data in result:
+            data["isCompleted"]=False
+        return result
     except json.JSONDecodeError as e:
         print(f"Error parsing JSON: {e}")
         return {"error": "Invalid JSON response from Gemini"}
 
 async def quiz_generate(file_path:str,ocr_notes:dict,difficulty:str,num_of_questions:int):
+    print("-"*100)
+    print(file_path)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404,detail="No such file found. Please re-upload")
     return await gemini_for_quiz(ocr_notes,difficulty,num_of_questions)
 
 
+# /home/jainam/Documents/projects/PrepMate/backend/uploads/L10.pdf

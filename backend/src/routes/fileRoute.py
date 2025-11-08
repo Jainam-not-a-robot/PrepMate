@@ -16,22 +16,21 @@ async def getting_notes(file_name:str):
 
 @fileRouter.get("/checklist")
 async def checklistMaker(filename:str):
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
-    # UPLOAD_DIR = BASE_DIR / "uploads"
-    # UPLOAD_DIR.mkdir(exist_ok=True) 
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent/"uploads"
     filename = Path(filename).name
     file_path=str(BASE_DIR/filename)
-    notes=await read_notes(filename)
-    # print(BASE_DIR,filename)
-    # notes=await read_notes(file_path)
+    notes=await read_notes(file_path)
     return await checklist_access(file_path,notes)
 
 @fileRouter.get("/quiz")
 async def quizGenerator(filename:str,difficulty:str,num_of_questions:int):
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent/"uploads"
     filename = Path(filename).name
+    print(BASE_DIR)
     file_path=str(BASE_DIR/filename)
-    ocr_notes=await read_notes(filename)
+    print(file_path)
+    # file_path="/home/jainam/Documents/projects/PrepMate/backend/uploads/l4.pdf"
+    ocr_notes=await read_notes(file_path)
     quiz=await quiz_generate(file_path,ocr_notes,difficulty,num_of_questions)
     return json.loads(quiz)
 

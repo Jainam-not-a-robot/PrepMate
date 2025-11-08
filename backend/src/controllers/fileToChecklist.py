@@ -7,8 +7,8 @@ import aiofiles
 import json
 from ..db.database import get_db
 from sqlalchemy.orm import Session
-from ..models.uploadFileModel import FileUploadModel,ChecklistModel
-
+from ..models.uploadFileModel import FileUploadModel,ChecklistModel, MultipleChecklistModel
+from datetime import datetime
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -43,18 +43,23 @@ async def makeChecklist(file_path:str,notes_text:dict,db:Session=Depends(get_db)
     checklist=await useGemini(notes_text)
     try:
         # Parse JSON response
+        current_time = datetime.now()
         print("-"*100)
         print(checklist)
         checklist=json.loads(checklist)
-        for item in checklist:
-            result = ChecklistModel(
-                item=item["topic"],
-                isCompleted=False
-            )
-            db.add(result)
+        parent=MultipleChecklistModel(
+            checklist_name="1",
+            checklists=[
+                ChecklistModel(item=item["topic"], isCompleted=False)
+                for item in checklist
+            ],
+            # created_at=current_time
+        )
+        
+        db.add(parent)
         db.commit()
-        db.refresh(result)
-        return result
+        db.refresh(parent)
+        return parent
 
     except json.JSONDecodeError as e:
         print(f"Error parsing JSON: {e}")

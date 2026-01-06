@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Upload from "./pages/Upload";
 import Topics from "./pages/Topics";
-import TopicActions from "./pages/TopicActions";
+import TopicActions from "./pages/TopicAction";
 import ImportantQuestions from "./pages/ImportantQuestions";
 import Quiz from "./pages/Quiz";
 import React from "react";

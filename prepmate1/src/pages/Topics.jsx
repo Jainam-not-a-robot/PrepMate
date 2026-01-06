@@ -13,7 +13,7 @@ const Topics = () => {
         onClick={() => navigate("/quiz/all")}
         className="mb-6 bg-indigo-600 text-white px-6 py-3 rounded-lg"
         >
-             🧠 Start Full Quiz (All Topics)
+              Start Full Quiz (All Topics)
         </button>
        
        <h2 className="text-2xl font-bold mb-4">  Important Topics </h2>

@@ -1,8 +1,11 @@
 import { useParams } from "react-router-dom";
 import { topics } from "../data/parsedData";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Container from "../components/container";
 import React from "react";
+
+const Total_Time = 10 * 60
+
 const Quiz = ({ mode }) => {
   const { topicId } = useParams();
 
@@ -15,48 +18,154 @@ const Quiz = ({ mode }) => {
     questions = topic.questions;
   }
 
-  const [index, setIndex] = useState(0);
-  const [score, setScore] = useState(0);
+  const [current, setCurrent] = useState(0)
+  const [answers, setAnswers] = useState(
+    new Array(questions.length).fill(null)
+  )
+  const [timeleft, setTimeleft] = useState(Total_Time)
+  const [submitted, setSubmitted] = useState(false)
 
-  const handleAnswer = (opt) => {
-    if (opt === questions[index].answer) {
-      setScore(score + 1);
+  useEffect(() => {
+    if (submitted) return;
+    if (timeleft === 0) {
+      handleSubmit();
+      return;
     }
-    setIndex(index + 1);
+    const timer = setInterval(() => {
+      setTimeleft((t) => t - 1)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [timeleft, submitted]);
+
+  const handleOptionSelect = (option) => {
+    const newAnswers = [...answers]
+    newAnswers[current] = option;
+    setAnswers(newAnswers);
   };
 
-  if (index >= questions.length) {
-    return (
-      <Container>
-        <h2 className="text-2xl font-bold">
-          Score: {score} / {questions.length}
-        </h2>
-      </Container>
-    );
+  const handleNext = () => {
+    if (current < questions.length - 1) {
+      setCurrent(current + 1)
+    }
   }
 
-  const q = questions[index];
+  const handlePrevious = () => {
+    if (current > 0) {
+      setCurrent(current - 1)
+    }
+  }
 
+  const handleSubmit = () => {
+    setSubmitted(true)
+  }
+
+  if (submitted) {
+    let score = 0;
+    answers.forEach((ans, i) => {
+      if (ans === questions[i].answer) score++;
+    })
+
+    return (
+      <Container>
+        <h2 className="text-2xl font-bold mb-4"> Result</h2>
+        <p className="text-lg mb-4">
+          Score : {score} / {questions.length}
+        </p>
+
+        {questions.map((q, i) => (
+          <div className="mb-4 p-4 border rounded" key={i}>
+            <p className="font-semibold"> {q.question}</p>
+            <p className={
+              answers[i] === q.answer
+                ? "text-green-400"
+                : "text-red-400"
+
+            }>
+              Your Answer : {answers[i] ?? "Not Answered"}
+            </p>
+            <p className="text-indigo-400">
+              Correct answer: {q.answer}
+            </p>
+
+          </div>
+        ))
+
+        }
+
+      </Container>
+
+
+    )
+  }
+  const q = questions[current]
+
+  const minutes = Math.floor(timeleft / 60)
+  const seconds = timeleft % 60
   return (
     <Container>
-      <h2 className="text-xl font-bold mb-4">
-        Question {index + 1}
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">
+          Questions {current + 1} / {questions.length}
+        </h2>
 
-      <p className="mb-4">{q.question}</p>
+        <span className="px-4 py-1 rounded-full bg-red-500/10 text-red-400">
+          ⏱ {minutes} : {seconds.toString().padStart(2, "0")}
 
-      {q.options.map((op, i) => (
+        </span>
+      </div>
+       
+       <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
+          <p className="text-lg font-semibold mb-4">
+          {q.question}
+        </p>
+         {q.options.map((op, idx) => (
+          <label key={idx} className="block mb-3 cursor-pointer">
+            <input
+              type="radio"
+              name="option"
+              checked={answers[current] === op}
+              onChange={() => handleOptionSelect(op)}
+            />{" "}
+            {op}
+          </label>
+        ))}
+       </div>
+
+      
+      <div className="flex justify-between">
         <button
-          key={i}
-          onClick={() => handleAnswer(op)}
-          className="block w-full text-left border p-3 mb-2 rounded
-                     hover:bg-indigo-500/10"
+          onClick={handlePrevious}
+          disabled={current === 0}
+          className="px-6 py-2 bg-gray-600 rounded disabled:opacity-50"
         >
-          {op}
+          ⬅ Previous
         </button>
-      ))}
-    </Container>
-  );
-};
 
-export default Quiz;
+        {current === questions.length - 1 ? (
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-2 bg-green-600 rounded"
+          >
+            Submit
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="px-6 py-2 bg-indigo-600 rounded"
+          >
+            Save & Next ➡
+          </button>
+        )}
+      </div>
+    </Container>
+
+
+
+
+
+
+  )
+}
+
+export default Quiz

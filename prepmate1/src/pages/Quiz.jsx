@@ -22,6 +22,10 @@ const Quiz = ({ mode }) => {
   const [answers, setAnswers] = useState(
     new Array(questions.length).fill(null)
   )
+  const [marked, setMarked] = useState(
+    new Array(questions.length).fill(null)
+  )
+  const [showSummary, setShowSummary] = useState(false)
   const [timeleft, setTimeleft] = useState(Total_Time)
   const [submitted, setSubmitted] = useState(false)
 
@@ -56,8 +60,51 @@ const Quiz = ({ mode }) => {
     }
   }
 
+  const toggleMark = () => {
+    const newMarked = [...marked]
+    newMarked[current] = !newMarked[current]
+    setMarked(newMarked)
+  }
   const handleSubmit = () => {
     setSubmitted(true)
+  }
+  const getStatusColor = (i) => {
+    if (marked[i]) return "bg-yellow-500";
+    if (answers[i] !== null) return "bg-green-500";
+    return "bg-red-500";
+  }
+
+
+  if (showSummary && !submitted) {
+    const attempted = answers.filter((a) => a !== null).length;
+    const markedCount = marked.filter(Boolean).length;
+    const unattempted = questions.length - attempted;
+
+    return (
+      <Container>
+        <h2 className="text-2xl font-bold mb-4">Test Summary</h2>
+
+        <p>Attempted: {attempted}</p>
+        <p>Unattempted: {unattempted}</p>
+        <p>Marked for Review: {markedCount}</p>
+
+        <div className="mt-6 flex gap-4">
+          <button
+            onClick={() => setShowSummary(false)}
+            className="px-6 py-2 bg-gray-600 rounded"
+          >
+            Go Back
+          </button>
+
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-2 bg-red-600 rounded"
+          >
+            Confirm Submit
+          </button>
+        </div>
+      </Container>
+    );
   }
 
   if (submitted) {
@@ -109,63 +156,87 @@ const Quiz = ({ mode }) => {
           Questions {current + 1} / {questions.length}
         </h2>
 
-        <span className="px-4 py-1 rounded-full bg-red-500/10 text-red-400">
+        <span className="px-4 py-1 rounded-full bg-red-500/10 text-green-400">
           ⏱ {minutes} : {seconds.toString().padStart(2, "0")}
 
         </span>
       </div>
-       
-       <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
-          <p className="text-lg font-semibold mb-4">
-          {q.question}
-        </p>
-         {q.options.map((op, idx) => (
-          <label key={idx} className="block mb-3 cursor-pointer">
-            <input
-              type="radio"
-              name="option"
-              checked={answers[current] === op}
-              onChange={() => handleOptionSelect(op)}
-            />{" "}
-            {op}
-          </label>
-        ))}
-       </div>
 
-      
-      <div className="flex justify-between">
-        <button
-          onClick={handlePrevious}
-          disabled={current === 0}
-          className="px-6 py-2 bg-gray-600 rounded disabled:opacity-50"
-        >
-          ⬅ Previous
-        </button>
+      <div className="flex gap-6">
 
-        {current === questions.length - 1 ? (
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-green-600 rounded"
-          >
-            Submit
-          </button>
-        ) : (
-          <button
-            onClick={handleNext}
-            className="px-6 py-2 bg-indigo-600 rounded"
-          >
-            Save & Next ➡
-          </button>
-        )}
+        <div className="w-48 grid grid-cols-4 gap-2">
+          {questions.map((_, i) => (
+            <div
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`w-10 h-10 text-sm rounded hover:cursor-pointer hover:border-solid hover:border-2 hover:border-indigo-600 flex justify-center items-center transition-all duration-200 ease-in-out  ${getStatusColor(
+                i
+              )}`}
+            >
+              {i + 1}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex-1">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
+            <p className="text-lg font-semibold mb-4">
+              {q.question}
+            </p>
+
+            {q.options.map((op, idx) => (
+              <label
+                key={idx}
+                className="block mb-3 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="option"
+                  checked={answers[current] === op}
+                  onChange={() => handleOptionSelect(op)}
+                />{" "}
+                {op}
+              </label>
+            ))}
+          </div>
+
+
+          <div className="flex justify-between items-center">
+            <button
+              onClick={handlePrevious}
+              disabled={current === 0}
+              className="px-4 py-2 bg-gray-600 rounded disabled:opacity-50"
+            >
+              ⬅ Previous
+            </button>
+
+            <button
+              onClick={toggleMark}
+              className="px-4 py-2 bg-yellow-600 rounded"
+            >
+              ⭐ Mark for Review
+            </button>
+
+            {current === questions.length - 1 ? (
+              <button
+                onClick={() => setShowSummary(true)}
+                className="px-4 py-2 bg-green-600 rounded"
+              >
+                Submit
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                className="px-4 py-2 bg-indigo-600 rounded"
+              >
+                Save & Next ➡
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </Container>
+  );
+};
 
-
-
-
-
-
-  )
-}
-
-export default Quiz
+export default Quiz;

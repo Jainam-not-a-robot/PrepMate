@@ -2,9 +2,11 @@ import { useParams } from "react-router-dom";
 import { topics } from "../data/parsedData";
 import { useEffect, useState } from "react";
 import Container from "../components/container";
+import ResultDonut from "./CircularProgress";
 import React from "react";
 
 const Total_Time = 10 * 60
+const STORAGE_KEY = "prepmate-exam-state"
 
 const Quiz = ({ mode }) => {
   const { topicId } = useParams();
@@ -17,16 +19,17 @@ const Quiz = ({ mode }) => {
     const topic = topics.find((t) => t.id === topicId);
     questions = topic.questions;
   }
-
-  const [current, setCurrent] = useState(0)
+   
+  const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY))
+  const [current, setCurrent] = useState(savedState?.current ?? 0)
   const [answers, setAnswers] = useState(
-    new Array(questions.length).fill(null)
+    savedState?.answers ?? new Array(questions.length).fill(null)
   )
   const [marked, setMarked] = useState(
-    new Array(questions.length).fill(null)
+    savedState?.marked ?? new Array(questions.length).fill(null)
   )
   const [showSummary, setShowSummary] = useState(false)
-  const [timeleft, setTimeleft] = useState(Total_Time)
+  const [timeleft, setTimeleft] = useState(typeof savedState?.timeleft === "number" ? savedState.timeleft : Total_Time)
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
@@ -41,6 +44,18 @@ const Quiz = ({ mode }) => {
 
     return () => clearInterval(timer)
   }, [timeleft, submitted]);
+
+  useEffect(() => {
+    if(submitted) return;
+
+    const state = {
+       current,
+       answers,
+       timeleft,
+       marked,
+    }
+    localStorage.setItem(STORAGE_KEY , JSON.stringify(state));
+  },[current, answers, marked, timeleft, submitted])
 
   const handleOptionSelect = (option) => {
     const newAnswers = [...answers]
@@ -66,6 +81,7 @@ const Quiz = ({ mode }) => {
     setMarked(newMarked)
   }
   const handleSubmit = () => {
+    localStorage.removeItem(STORAGE_KEY)
     setSubmitted(true)
   }
   const getStatusColor = (i) => {
@@ -108,43 +124,102 @@ const Quiz = ({ mode }) => {
   }
 
   if (submitted) {
-    let score = 0;
-    answers.forEach((ans, i) => {
-      if (ans === questions[i].answer) score++;
-    })
+     const correct = answers.filter(
+      (ans ,i) => ans === questions[i].answer
+     ).length
+
+     const unattempted = answers.filter((a) => a === null).length;
+      const wrong = questions.length - correct - unattempted;
+     const accuracy = Math.round((correct/questions.length)*100)
 
     return (
-      <Container>
-        <h2 className="text-2xl font-bold mb-4"> Result</h2>
-        <p className="text-lg mb-4">
-          Score : {score} / {questions.length}
-        </p>
+    <Container>
+      <h2 className="text-3xl font-bold mb-8 text-center">
+        🎉 Test Result Summary
+      </h2>
 
-        {questions.map((q, i) => (
-          <div className="mb-4 p-4 border rounded" key={i}>
-            <p className="font-semibold"> {q.question}</p>
-            <p className={
-              answers[i] === q.answer
-                ? "text-green-400"
-                : "text-red-400"
+    
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
-            }>
-              Your Answer : {answers[i] ?? "Not Answered"}
-            </p>
-            <p className="text-indigo-400">
-              Correct answer: {q.answer}
-            </p>
+       
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex justify-center items-center">
+          <ResultDonut
+            correct={correct}
+            wrong={wrong}
+            unattempted={unattempted}
+            total={questions.length}
+          />
+        </div>
 
+       
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col justify-center gap-4">
+
+          <div className="flex justify-between text-lg">
+            <span className="text-green-400">🟢 Correct</span>
+            <span>{correct}</span>
           </div>
-        ))
 
-        }
+          <div className="flex justify-between text-lg">
+            <span className="text-yellow-400">🟡 Unattempted</span>
+            <span>{unattempted}</span>
+          </div>
 
-      </Container>
+          <div className="flex justify-between text-lg">
+            <span className="text-red-400">🔴 Wrong</span>
+            <span>{wrong}</span>
+          </div>
 
+          <div className="mt-4 pt-4 border-t border-white/10 text-center">
+            <p className="text-sm text-gray-400">Accuracy</p>
+            <p className="text-4xl font-bold text-indigo-400">
+              {accuracy}%
+            </p>
+          </div>
+        </div>
+      </div>
 
-    )
-  }
+      
+      <h3 className="text-2xl font-bold mb-4">
+        📄 Detailed Solutions
+      </h3>
+
+      <div className="space-y-4">
+        {questions.map((q, i) => {
+          const isCorrect = answers[i] === q.answer;
+
+          return (
+            <div
+              key={i}
+              className={`p-5 rounded-xl border ${
+                isCorrect
+                  ? "border-green-500/30 bg-green-500/5"
+                  : "border-red-500/30 bg-red-500/5"
+              }`}
+            >
+              <p className="font-semibold mb-2">
+                Q{i + 1}. {q.question}
+              </p>
+
+              <p
+                className={
+                  isCorrect ? "text-green-400" : "text-red-400"
+                }
+              >
+                Your Answer: {answers[i] ?? "Not Answered"}
+              </p>
+
+              {!isCorrect && (
+                <p className="text-indigo-400">
+                  Correct Answer: {q.answer}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Container>
+  );
+}
   const q = questions[current]
 
   const minutes = Math.floor(timeleft / 60)

@@ -28,6 +28,13 @@ const Quiz = ({ mode }) => {
   const [marked, setMarked] = useState(
     savedState?.marked ?? new Array(questions.length).fill(null)
   )
+  const [questionTimes, setQuestionTimes] = useState(
+  savedState?.questionTimes ?? new Array(questions.length).fill(0)
+);
+
+ 
+const [lastSwitchTime, setLastSwitchTime] = useState(Date.now());
+
   const [showSummary, setShowSummary] = useState(false)
   const [timeleft, setTimeleft] = useState(typeof savedState?.timeleft === "number" ? savedState.timeleft : Total_Time)
   const [submitted, setSubmitted] = useState(false)
@@ -53,9 +60,25 @@ const Quiz = ({ mode }) => {
        answers,
        timeleft,
        marked,
+       questionTimes,
     }
     localStorage.setItem(STORAGE_KEY , JSON.stringify(state));
   },[current, answers, marked, timeleft, submitted])
+   
+  const recordTimeSpent = (nextIndex) => {
+  const now = Date.now();
+  const diff = Math.floor((now - lastSwitchTime) / 1000);
+
+  const newTimes = [...questionTimes];
+  newTimes[current] += diff;
+
+  setQuestionTimes(newTimes);
+  setLastSwitchTime(now);
+
+  if (typeof nextIndex === "number") {
+    setCurrent(nextIndex);
+  }
+};
 
   const handleOptionSelect = (option) => {
     const newAnswers = [...answers]
@@ -65,13 +88,13 @@ const Quiz = ({ mode }) => {
 
   const handleNext = () => {
     if (current < questions.length - 1) {
-      setCurrent(current + 1)
+    recordTimeSpent(current + 1)
     }
   }
 
   const handlePrevious = () => {
     if (current > 0) {
-      setCurrent(current - 1)
+      recordTimeSpent(current - 1)
     }
   }
 
@@ -82,6 +105,7 @@ const Quiz = ({ mode }) => {
   }
   const handleSubmit = () => {
     localStorage.removeItem(STORAGE_KEY)
+    recordTimeSpent();
     setSubmitted(true)
   }
   const getStatusColor = (i) => {
@@ -190,12 +214,16 @@ const Quiz = ({ mode }) => {
           return (
             <div
               key={i}
-              className={`p-5 rounded-xl border ${
+              className={` relative p-5 rounded-xl border ${
                 isCorrect
                   ? "border-green-500/30 bg-green-500/5"
                   : "border-red-500/30 bg-red-500/5"
               }`}
             >
+               <div className="absolute top-4 right-4 text-xs px-3 py-1 rounded-full bg-black/40 border border-white/10 text-gray-300 flex items-center gap-1">
+   ⏱  : {questionTimes[i] ?? 0}sec
+</div>
+
               <p className="font-semibold mb-2">
                 Q{i + 1}. {q.question}
               </p>
@@ -213,6 +241,7 @@ const Quiz = ({ mode }) => {
                   Correct Answer: {q.answer}
                 </p>
               )}
+           
             </div>
           );
         })}
@@ -243,7 +272,7 @@ const Quiz = ({ mode }) => {
           {questions.map((_, i) => (
             <div
               key={i}
-              onClick={() => setCurrent(i)}
+              onClick={() => recordTimeSpent(i)}
               className={`w-10 h-10 text-sm rounded hover:cursor-pointer hover:border-solid hover:border-2 hover:border-indigo-600 flex justify-center items-center transition-all duration-200 ease-in-out  ${getStatusColor(
                 i
               )}`}

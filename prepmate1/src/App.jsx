@@ -16,6 +16,7 @@ import Signup from "./pages/auth/Signup";
 
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import ProtectedRoute from "./pages/ProtectedRoute";
 
 const App = () => {
   const location = useLocation();
@@ -32,17 +33,86 @@ const App = () => {
         <Route path="/" element={<Home />} />
 
         {/* Main app pages (NO NAVBAR) */}
-        <Route path="/upload" element={<Upload />} />
-        <Route path="/topics" element={<Topics />} />
-        <Route path="/topics/:topicId" element={<TopicActions />} />
-        <Route path="/topics/:topicId/questions" element={<ImportantQuestions />} />
-        <Route path="/topics/:topicId/quiz" element={<Quiz />} />
-        <Route path="/quiz/all" element={<Quiz mode="all" />} />
-        <Route path="/processing" element={<Processing />} />
+       <Route
+  path="/upload"
+  element={
+    <ProtectedRoute>
+      <Upload />
+    </ProtectedRoute>
+  }
+/>
 
-        {/* User pages */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
+<Route
+  path="/topics"
+  element={
+    <ProtectedRoute>
+      <Topics />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/topics/:topicId"
+  element={
+    <ProtectedRoute>
+      <TopicActions />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/topics/:topicId/questions"
+  element={
+    <ProtectedRoute>
+      <ImportantQuestions />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/topics/:topicId/quiz"
+  element={
+    <ProtectedRoute>
+      <Quiz />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/quiz/all"
+  element={
+    <ProtectedRoute>
+      <Quiz mode="all" />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/processing"
+  element={
+    <ProtectedRoute>
+      <Processing />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/dashboard"
+  element={
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <Profile />
+    </ProtectedRoute>
+  }
+/>
 
         {/* Auth pages (WITH AuthLayout) */}
         <Route element={<AuthLayout />}>

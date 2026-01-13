@@ -1,34 +1,55 @@
-import React from "react";
-import Container from "../components/container";
-import { Link } from "react-router-dom";
-function Home(){
+import { useNavigate } from "react-router-dom";
+import bg from "../assets/study-bg.png";
 
-  return(
-    <Container>
-    <h1 className="text-4xl font-bold text-indigo-400 mb-4">
-        Welcome to Prepmate
+const Home = () => {
+  const navigate = useNavigate();
 
-    </h1>
+  return (
+    <div
+      className="min-h-screen flex items-center"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(2,6,23,0.92), rgba(2,6,23,0.75), rgba(2,6,23,0.4)),
+          url(${bg})
+        `,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-10">
+        <div className="max-w-3xl">
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
+            <span className="text-indigo-400">Turn Your Notes</span>
+            <br />
+            Into <span className="text-white">Smart AI Tests</span>
+          </h1>
 
-    <p className="text-gray-300 text-lg mb-6">
-        PrepMate helps you prepare smarter using your own notes.
-        Upload a PDF, extract important topics, practice key questions,
-        and test yourself with quizzes — all automatically.
-      </p>
+          <p className="text-lg md:text-xl text-gray-300 mb-6">
+            PrepMate uses AI to convert your PDFs into important topics, questions,
+            and full-length mock tests automatically.
+          </p>
 
-          <p className="text-gray-400 mb-8">
-        No subjects. No clutter. Just upload and start learning.
-      </p>
+          <p className="text-gray-400 mb-10">
+            Upload. Learn. Analyze. Improve. 
+          </p>
+           
+           
 
-       <Link
-        to="/upload"
-        className="inline-block bg-indigo-600 hover:bg-indigo-500
-                   transition text-white px-6 py-3 rounded-lg font-medium"
-      >
-        Get Started → Upload Notes
-      </Link>
-      
-   </Container>
-  )
-}
-export default Home 
+
+
+       
+
+          <div className="flex gap-6 mt-10 text-sm text-gray-400">
+            <div> AI Question Generator</div>
+            <div> Smart Analysis</div>
+            <div> Performance Tracking</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home;
+
+

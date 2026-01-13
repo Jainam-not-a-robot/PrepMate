@@ -36,7 +36,7 @@ const Upload = () => {
 
   const handleExtract = () => {
     if (!file) return alert("Please upload a file first");
-    navigate("/topics");
+    navigate("/processing");
   };
 
   const handleFullTest = () => {

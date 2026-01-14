@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/container";
+import axios from "axios";
 
 const Upload = () => {
   const [file, setFile] = useState(null);
   const navigate = useNavigate();
   const [dragActive ,setDragActive] = useState(false);
+  const BASE_URL = import.meta.env.VITE_BASE_URL;
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
@@ -34,16 +36,39 @@ const Upload = () => {
     setFile(null);
   };
 
-  const handleExtract = () => {
+  const handleExtract = async () => {
     if (!file) return alert("Please upload a file first");
+    await uploadFileToBackend()
     navigate("/processing");
   };
 
-  const handleFullTest = () => {
+  const handleFullTest = async () => {
     if (!file) return alert("Please upload a file first");
+    await uploadFileToBackend()
     navigate("/quiz/all");
   };
-
+  const uploadFileToBackend = async () => {
+     if (!file) return alert("Please upload a file first");
+     const formData = new FormData();
+     formData.append("file",file);
+      try {
+        const res = await axios.post(
+          `${BASE_URL}/files/uploadFiles`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        return res.data;
+      }
+      catch (err) {
+        console.error(err);
+        alert("File upload failed");
+        throw err;
+      }
+  }
   return (
     <Container>
       <div className="max-w-4xl mx-auto">

@@ -11,17 +11,17 @@ import json
 from typing import List
 # Load API key from .env
 load_dotenv()
+
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("API key not found in environment variables!")
 
-
+genai.configure(api_key=api_key)
 async def useGemini(user_prompt: dict):
     """Async wrapper for synchronous Gemini API call."""
     return await _generate_gemini_response(user_prompt)
 
 async def _generate_gemini_response(user_prompt):
-    genai.configure(api_key=api_key)
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash",
         system_instruction=(
@@ -35,21 +35,16 @@ async def _generate_gemini_response(user_prompt):
             temperature=0.3
         )
     )
-    i=0
-    for i in range(3):
-        if(len(user_prompt["full_text"])<2000):
-            response = model.generate_content(user_prompt["full_text"]).text
-        else:
-            responses = []
-            for page_text in user_prompt["page_by_page_text"]:
-                part = model.generate_content(page_text)
-                responses.append(part.text)
-            response= ",".join(responses)
-        print(response)
-    if(i==3):
-        return None
+    if len(user_prompt["full_text"]) < 2000:
+        text = user_prompt["full_text"]
+    else:
+        text = "\n".join(user_prompt["page_by_page_text"])
 
-    return response
+    # hard cap for safety
+    text = text[:12000]
+
+    response = model.generate_content(text)
+    return response.text
 
 async def gemini_for_quiz(ocr_notes:dict,difficulty:str,num_of_questions:int):
     return await _use_gemini_for_quiz(ocr_notes,difficulty,num_of_questions)
